@@ -137,6 +137,7 @@ class player(entity):
     def switch_weapon(self):
         self.equipment.append(self.equipment[0])
         self.equipment.remove(self.equipment[0])
+        self.tick = 0
 
     def test_death(self):
         if self.hp <= 0:
@@ -149,7 +150,6 @@ class player(entity):
             if self.hp > self.hpmax:
                 self.hp = self.hpmax
             self.regentick = 0
-                    
 
 class enemy(entity):
     """

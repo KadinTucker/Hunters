@@ -30,5 +30,7 @@ class area():
 
 world = {}
 
-world['hunterland1'] = ([(objects.soldier[0], objects.soldier[1], (300, 230)), (objects.soldier[0], objects.soldier[1], (600, 730))], [], [], [None, 'hunterland2', None, None], (80, 40, 10))
-world['hunterland2'] = ([(objects.soldier[0], objects.soldier[1], (200, 730))], [], [], [None, None, None, 'hunterland1'], (80, 40, 10))
+world['hunterland1'] = ([(objects.soldier[0], objects.soldier[1], (300, 230)), (objects.soldier[0], objects.soldier[1], (800, 560))], [], [], ['hunterland4', 'hunterland2', None, None], (80, 40, 10))
+world['hunterland2'] = ([(objects.soldier[0], objects.soldier[1], (540, 330))], [], [], ['hunterland3', None, None, 'hunterland1'], (80, 40, 10))
+world['hunterland3'] = ([(objects.soldier[0], objects.soldier[1], (200, 430))], [], [], [None, None, 'hunterland2', 'hunterland4'], (80, 40, 10))
+world['hunterland4'] = ([(objects.soldier[0], objects.soldier[1], (100, 730))], [], [], [None, 'hunterland3', 'hunterland1', None], (80, 40, 10))

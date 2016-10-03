@@ -172,11 +172,18 @@ def roomLoop(room, display):
 ##    for i in room.sceneries:
 ##        display.blit(i.image, i.coords)
 
+def show_tick(display):
+        length = int((100 * PLAYER.tick)/200)
+        bar2 = pygame.transform.smoothscale(pygame.image.load('ybar.png'), (length, 20))
+        display.blit(pygame.image.load('bbar.png'), (100, RES[1] - 60))
+        display.blit(bar2, (100, RES[1] - 60))
+
 def display_gui(display, gui, font):
     display.blit(gui[0], (0, RES[1] - 200))
     display.blit(PLAYER.equipment[0].image, (23, RES[1] - 70))
     display.blit(gui[1], (0, 0))
     display.blit(font.render(str(PLAYER.kills), True, (150, 100, 0)), (150, 8))
+    show_tick(display)
 
 def initialize():
     """
