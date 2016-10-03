@@ -142,7 +142,8 @@ def setMusic(song, delay):
 
 def displayPlayer(display):
     display.blit(PLAYER.image, (PLAYER.coords[0] - PLAYER.size, PLAYER.coords[1] - PLAYER.size))
-    PLAYER.show_hp(display)
+    if PLAYER.hp > 0:
+        PLAYER.show_hp(display)
     if PLAYER.entity_target != None:
         #pygame.draw.ellipse(display, (255, 0, 0), ((int(PLAYER.entity_target.coords[0] - 20), int(PLAYER.entity_target.coords[1])), int((PLAYER.entity_target.coords[0] + 20), int(PLAYER.entity_target.coords[1])), int(PLAYER.entity_target.coords[0]), int(PLAYER.entity_target.coords[1] - 20)), (int(PLAYER.entity_target.coords[0]), int(PLAYER.entity_target.coords[1] + 20)))
         display.blit(pygame.image.load('target_reticule.png'), (PLAYER.entity_target.coords[0] - 23, PLAYER.entity_target.coords[1] - 23))
@@ -166,10 +167,16 @@ def roomLoop(room, display):
             if i.entity_target != None:
                 i.attack(TPS)
             i.checkDeath(PLAYER)
-            if i.hp >= 0:
+            if i.hp > 0:
                 i.show_hp(display)
 ##    for i in room.sceneries:
 ##        display.blit(i.image, i.coords)
+
+def display_gui(display, gui, font):
+    display.blit(gui[0], (0, RES[1] - 200))
+    display.blit(PLAYER.equipment[0].image, (23, RES[1] - 70))
+    display.blit(gui[1], (0, 0))
+    display.blit(font.render(str(PLAYER.kills), True, (150, 100, 0)), (150, 8))
 
 def initialize():
     """
@@ -178,13 +185,16 @@ def initialize():
     Returns a list of buttons in the main menu, and the starting game state.
     """
     print('CONSOLE: Initializing loop...')
-    global PLAYER, resolution
-    PLAYER = objects.player([3, 5, 20, 2.5, 50, 600], ['player.png', 'humandeath.ogg', 'crossbow.ogg'], (700, 700))
+    global PLAYER, resolution, font
+    PLAYER = objects.player([3, 20, 50], ['player.png', 'humandeath.ogg'], (700, 700))
     resolution = (RES)
     room = world.area(world.world['hunterland1'])
     room.buildSurface(resolution)
+    gui = [pygame.image.load('GUI_1.png'), pygame.image.load('GUI_2.png')]
     pygame.init()
     pygame.mixer.init()
+    pygame.font.init()
+    font = pygame.font.Font(None, 60)
 ##    sounds = initSounds()
     display = pygame.display.set_mode(resolution)
     pygame.display.toggle_fullscreen()
@@ -192,9 +202,9 @@ def initialize():
     gamestate = 1 #Gamestate 1 is the main menu.
     setMusic('Music', 0)
     print('CONSOLE: Init complete. Starting loop.')
-    return buttons, gamestate, display, room
+    return buttons, gamestate, display, room, gui
 
-def runProgram(buttons, gamestate, display, room):
+def runProgram(buttons, gamestate, display, room, gui):
     """
     Run the program main loop
 
@@ -203,7 +213,7 @@ def runProgram(buttons, gamestate, display, room):
     #setMusic('Intrepid', 0)
     while True:
         if gamestate == 1:
-            display.fill((65, 35, 55))
+            display.fill((85, 35, 5))
             for event in pygame.event.get():
                 if event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -217,8 +227,11 @@ def runProgram(buttons, gamestate, display, room):
                 
         elif gamestate == 2:
 ##            display.fill((50, 150, 50))
+            if PLAYER.test_death():
+                gamestate = 3
             display.blit(room.scene, (0, 0))
             displayPlayer(display)
+            display_gui(display, gui, font)
             for event in pygame.event.get():
                 if event.type == QUIT:
                     terminate()
@@ -226,16 +239,27 @@ def runProgram(buttons, gamestate, display, room):
                     if event.button == 3:
                         PLAYER.target_location(room)
                         PLAYER.entity_target = PLAYER.target_entity(room)
+                elif event.type == KEYDOWN:
+                    if event.key == K_TAB:
+                        PLAYER.switch_weapon()
             PLAYER.attack()
             PLAYER.move()
             PLAYER.collision(room)
+            PLAYER.regenerate()
             roomLoop(room, display)
             room = checkWarp(room)
             displayArrows(room, display)
-                    
+
         elif gamestate == 0:
             print('CONSOLE: Quitting game.')
             terminate()
+
+        elif gamestate == 3:
+            display.fill((75, 35, 35))
+            display.blit(pygame.image.load('gameover.png'), (RES[0] / 2 - 150, RES[1] / 2 - 150))
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    terminate()
 
         CLOCK.tick(TPS)
         pygame.display.update()
@@ -244,8 +268,8 @@ def main():
     """
     Initialize data, then run the program.
     """
-    buttons, gamestate, display, room = initialize()
-    runProgram(buttons, gamestate, display, room)
+    buttons, gamestate, display, room, gui = initialize()
+    runProgram(buttons, gamestate, display, room, gui)
 
 if __name__ == '__main__':
     main()

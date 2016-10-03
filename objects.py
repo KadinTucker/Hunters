@@ -1,5 +1,6 @@
 import math
 import pygame
+import equipment
 
 pygame.mixer.init()
 
@@ -27,8 +28,7 @@ class entity(object):
         self.frozen = False
         self.movements = (0, 0)
         self.speed = stats[0]
-        self.damage = stats[1]
-        self.size = stats[2]
+        self.size = stats[1]
         self.image = pygame.image.load(displays[0])
         self.deathsound = pygame.mixer.Sound(displays[1])
         
@@ -102,25 +102,25 @@ class player(entity):
     """
     def __init__(self, stats, displays, coords):
         super(player, self).__init__(stats, displays, coords)
-        self.atkspd = stats[3]
-        self.hpmax = stats[4]
+        self.hpmax = stats[2]
         self.hp = self.hpmax
-        self.range = stats[5]
         self.atktick = 0
         self.tick = 0
+        self.regentick = 0
+        self.equipment = [equipment.weapon(equipment.crossbow), equipment.weapon(equipment.spear)]
         self.temphp = self.hpmax
-        self.atksound = pygame.mixer.Sound(displays[2])
+        self.kills = 0
         
     def attack(self):
         if self.entity_target != None:
             distance = math.hypot(self.entity_target.coords[0] - self.coords[0], self.entity_target.coords[1] - self.coords[1])
-            if distance <= self.range:
+            if distance <= self.equipment[0].range:
                 self.frozen = True
-                self.tick += self.atkspd
-                if self.tick >= 500:
-                    self.entity_target.hp -= self.damage
-                    self.atksound.play()
-                    self.tick -= 500
+                self.tick += self.equipment[0].atkspd
+                if self.tick >= 200:
+                    self.entity_target.hp -= self.equipment[0].damage
+                    self.equipment[0].sound.play()
+                    self.tick -= 200
                     self.entity_target.target = self.coords
             else:
                 self.frozen = False
@@ -133,6 +133,22 @@ class player(entity):
 ##                    return
         self.target = pygame.mouse.get_pos()
         self.entity_target = None
+
+    def switch_weapon(self):
+        self.equipment.append(self.equipment[0])
+        self.equipment.remove(self.equipment[0])
+
+    def test_death(self):
+        if self.hp <= 0:
+            return True
+
+    def regenerate(self):
+        self.regentick += 1
+        if self.regentick >= 300:
+            self.hp += 1
+            if self.hp > self.hpmax:
+                self.hp = self.hpmax
+            self.regentick = 0
                     
 
 class enemy(entity):
@@ -144,15 +160,13 @@ class enemy(entity):
     """
     def __init__(self, stats, displays, coords):
         super(enemy, self).__init__(stats, displays, coords)
-        self.atkspd = stats[3]
-        self.sight = stats[4]
-        self.hpmax = stats[5]
+        self.sight = stats[2]
+        self.hpmax = stats[3]
         self.hp = self.hpmax
-        self.range = stats[6]
         self.tick = 0
         self.resetTick = 0
+        self.equipment = equipment.weapon(stats[4])
         self.temphp = self.hpmax
-        self.atksound = pygame.mixer.Sound(displays[2])
         self.origin = coords
         self.alive = True
         
@@ -174,12 +188,12 @@ class enemy(entity):
 
     def attack(self, TPS):
         distance = math.hypot(self.entity_target.coords[0] - self.coords[0], self.entity_target.coords[1] - self.coords[1])
-        if distance <= self.range:
+        if distance <= self.equipment.range:
             self.frozen = True
-            self.tick += self.atkspd
+            self.tick += self.equipment.atkspd
             if self.tick >= TPS:
-                self.entity_target.hp -= self.damage
-                self.atksound.play()
+                self.entity_target.hp -= self.equipment.damage
+                self.equipment.sound.play()
                 self.tick -= TPS
         else:
             self.frozen = False
@@ -189,9 +203,10 @@ class enemy(entity):
             self.deathsound.play()
             self.alive = False
             PLAYER.entity_target = None
+            PLAYER.kills += 1
             
     
-soldier = [[2, 4, 16, 0.95, 157, 18, 38], ['soldier.png', 'humandeath.ogg', 'slash.ogg']]
+soldier = [[2, 16, 200, 30, equipment.sword], ['soldier.png', 'humandeath.ogg']]
 
 
 
