@@ -90,11 +90,7 @@ class entity(object):
                     return i
         return None
 
-    def show_hp(self, display):
-        length = (35 * self.hp)/self.hpmax
-        gbar2 = pygame.transform.smoothscale(pygame.image.load('gbar.png'), (length, 10))
-        display.blit(pygame.image.load('rbar.png'), (self.coords[0] - 20, self.coords[1] - 26))
-        display.blit(gbar2, (self.coords[0] - 20, self.coords[1] - 26))
+    
 
 class player(entity):
     """
@@ -107,7 +103,7 @@ class player(entity):
         self.atktick = 0
         self.tick = 0
         self.regentick = 0
-        self.equipment = [equipment.weapon(equipment.crossbow), equipment.weapon(equipment.spear)]
+        self.equipment = []
         self.temphp = self.hpmax
         self.kills = 0
         
@@ -118,12 +114,14 @@ class player(entity):
                 self.frozen = True
                 self.tick += self.equipment[0].atkspd
                 if self.tick >= 200:
-                    self.entity_target.hp -= self.equipment[0].damage
+                    self.entity_target.hp -= self.equipment[0].get_damage()
                     self.equipment[0].sound.play()
                     self.tick -= 200
                     self.entity_target.target = self.coords
             else:
                 self.frozen = False
+        else:
+            self.tick = 0
 
     def target_location(self, room):
 ##        mouse = pygame.mouse.get_pos()
@@ -158,7 +156,7 @@ class enemy(entity):
     atktick is the ticking of attacking rate.
     Temphp is used to determine whether the enemy has taken damage.
     """
-    def __init__(self, stats, displays, coords):
+    def __init__(self, stats, displays, coords, exp):
         super(enemy, self).__init__(stats, displays, coords)
         self.sight = stats[2]
         self.hpmax = stats[3]
@@ -169,6 +167,7 @@ class enemy(entity):
         self.temphp = self.hpmax
         self.origin = coords
         self.alive = True
+        self.exp = exp
         
     def AI(self, PLAYER):
         distance = math.hypot(PLAYER.coords[0] - self.coords[0], PLAYER.coords[1] - self.coords[1])
@@ -187,16 +186,19 @@ class enemy(entity):
 ##            self.temphp = self.hp
 
     def attack(self, TPS):
-        distance = math.hypot(self.entity_target.coords[0] - self.coords[0], self.entity_target.coords[1] - self.coords[1])
-        if distance <= self.equipment.range:
-            self.frozen = True
-            self.tick += self.equipment.atkspd
-            if self.tick >= TPS:
-                self.entity_target.hp -= self.equipment.damage
-                self.equipment.sound.play()
-                self.tick -= TPS
+        if self.entity_target != None:
+            distance = math.hypot(self.entity_target.coords[0] - self.coords[0], self.entity_target.coords[1] - self.coords[1])
+            if distance <= self.equipment.range:
+                self.frozen = True
+                self.tick += self.equipment.atkspd
+                if self.tick >= TPS:
+                    self.entity_target.hp -= self.equipment.damage
+                    self.equipment.sound.play()
+                    self.tick -= TPS
+            else:
+                self.frozen = False
         else:
-            self.frozen = False
+            self.tick = 0
 
     def checkDeath(self, PLAYER):
         if self.hp <= 0:
@@ -204,9 +206,18 @@ class enemy(entity):
             self.alive = False
             PLAYER.entity_target = None
             PLAYER.kills += 1
+            PLAYER.equipment[0].exp += self.exp
+            PLAYER.equipment[0].levelup()
+
+    def show_hp(self, display):
+        length = (35 * self.hp)/self.hpmax
+        gbar2 = pygame.transform.smoothscale(pygame.image.load('gbar.png'), (length, 10))
+        display.blit(pygame.image.load('rbar.png'), (self.coords[0] - 17, self.coords[1] - 36))
+        display.blit(gbar2, (self.coords[0] - 17, self.coords[1] - 36))
             
     
-soldier = [[2, 16, 200, 30, equipment.sword], ['soldier.png', 'humandeath.ogg']]
+bandit1 = [[2, 32, 200, 30, equipment.banditSword], ['bandit1.png', 'humandeath.ogg'], 4]
+bandit2 = [[2, 32, 200, 30, equipment.banditBow], ['bandit2.png', 'humandeath.ogg'], 4]
 
 
 

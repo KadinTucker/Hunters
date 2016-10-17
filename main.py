@@ -5,6 +5,7 @@ import sys
 try:
     import objects
     import world
+    import equipment
 except:
     print('CONSOLE: Missing required modules. Terminating...')
 
@@ -57,11 +58,13 @@ class button():
     Takes in button ID, which determines where the button takes you when pressing it.
     Takes in image, the image in which it displays on the screen.
     """
-    def __init__(self, location, identity, image):
+    def __init__(self, location, identity, image, size):
         self.location = location
         self.identity = identity
         self.image = image
         self.pressed = False
+        self.active = False
+        self.size = size
         
     def buttonPressed(self):
         """
@@ -71,8 +74,8 @@ class button():
         """
         mouse = pygame.mouse.get_pos()
         print('CONSOLE: Clicked at point '+str(mouse))
-        if mouse[0] - self.location[0] <= 200 and mouse[0] - self.location[0] >= 0:
-            if mouse[1] - self.location[1] <= 50 and mouse[1] - self.location[1] >= 0:
+        if mouse[0] - self.location[0] <= self.size[0] and mouse[0] - self.location[0] >= 0:
+            if mouse[1] - self.location[1] <= self.size[1] and mouse[1] - self.location[1] >= 0:
                 self.pressed = True
                 print('CONSOLE: Button of ID %s has been pressed.' % self.identity)
     def displayButtons(self, display):
@@ -82,9 +85,10 @@ class button():
 
         Takes in the main game display screen.
         """
-        display.blit(self.image, self.location)
+        if self.active:
+            display.blit(self.image, self.location)
 
-def checkButtons(buttons):
+def checkButtons(gamestate):
     """
     Checks whether the ID of all buttons being pressed checks out with any pre-determined functions
     of specific buttons. If the function goes through and nothing happens, the button becomes un-pressed.
@@ -95,19 +99,97 @@ def checkButtons(buttons):
 
     Returns the new game state.
     """
-    for i in buttons:
-        if i.pressed == True:
-            if i.identity == 'quit':
-                print('CONSOLE: Quit Button pressed.')
-                return 0
-                print('ERROR: Quit not gone through.')
-            if i.identity == 'play':
-                print('CONSOLE: Play button pressed.')
-                #setMusic('Janon', 0)
-                return 2
-        else:
-            i.pressed == False
-    return 1
+    for b in buttons:
+        i = buttons[b]
+        if i.active:
+            if i.pressed:
+                print('CONSOLE: Active button has been pressed.')
+                if i.identity == 'quit':
+                    print('CONSOLE: Quit Button pressed.')
+                    return 0
+                    print('ERROR: Quit not gone through.')
+                if i.identity == 'play':
+                    print('CONSOLE: Play button pressed.')
+                    #setMusic('Janon', 0)
+                    buttons['menuQuit'].active = False
+                    buttons['menuPlay'].active = False
+                    buttons['menuTitle'].active = False
+
+                    buttons['wpchCrossbow'].active = True
+                    buttons['wpchBow'].active = True
+                    buttons['wpchKnife'].active = True
+                    buttons['wpchSword'].active = True
+                    buttons['wpchSpear'].active = True
+                    buttons['wpchAxe'].active = True
+                    return 4
+
+                
+                #weapon choices
+
+                
+                elif i.identity == 'bow':
+                    PLAYER.equipment.append(equipment.weapon(equipment.bow))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchCrossbow'].active = False
+                    buttons['wpchBow'].active = False
+                    buttons['wpchKnife'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+                elif i.identity == 'crossbow':
+                    PLAYER.equipment.append(equipment.weapon(equipment.crossbow))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchCrossbow'].active = False
+                    buttons['wpchBow'].active = False
+                    buttons['wpchKnife'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+                elif i.identity == 'knives':
+                    PLAYER.equipment.append(equipment.weapon(equipment.knives))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchCrossbow'].active = False
+                    buttons['wpchBow'].active = False
+                    buttons['wpchKnife'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+                elif i.identity == 'spear':
+                    PLAYER.equipment.append(equipment.weapon(equipment.spear))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchSword'].active = False
+                    buttons['wpchSpear'].active = False
+                    buttons['wpchAxe'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+                elif i.identity == 'sword':
+                    PLAYER.equipment.append(equipment.weapon(equipment.sword))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchSword'].active = False
+                    buttons['wpchSpear'].active = False
+                    buttons['wpchAxe'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+                elif i.identity == 'axe':
+                    PLAYER.equipment.append(equipment.weapon(equipment.axe))
+                    print('CONSOLE: Player now has %s equipment items.' % len(PLAYER.equipment))
+                    buttons['wpchSword'].active = False
+                    buttons['wpchSpear'].active = False
+                    buttons['wpchAxe'].active = False
+                    if len(PLAYER.equipment) == 2:
+                        return 2
+                    else:
+                        return 4
+            else:
+                i.pressed == False
+    return gamestate
 
 def initButtons():
     """
@@ -115,12 +197,17 @@ def initButtons():
 
     Returns a list of all buttons in the main menu.
     """
-    buttons = []
     #buttons.append(button((RES[0], 210), 'load', pygame.image.load('loadgameButton.png')))
-    buttons.append(button((RES[0] / 2 - 125, 20), None, pygame.image.load('title.png')))
-    buttons.append(button((RES[0] / 2 - 100, 150), 'play', pygame.image.load('newgameButton.png')))
-    buttons.append(button((RES[0] / 2 - 100, 270), 'quit', pygame.image.load('quitButton.png')))
-    return buttons
+    buttons['menuTitle'] = button((RES[0] / 2 - 125, 20), None, pygame.image.load('title.png'), (200, 50))
+    buttons['menuPlay'] = button((RES[0] / 2 - 100, 150), 'play', pygame.image.load('newgameButton.png'), (200, 50))
+    buttons['menuQuit'] = button((RES[0] / 2 - 100, 270), 'quit', pygame.image.load('quitButton.png'), (200, 50))
+
+    buttons['wpchBow'] = button((RES[0] / 2 - 200, 100), 'bow', pygame.image.load('bow.png'), (90, 90))
+    buttons['wpchCrossbow'] = button((RES[0] / 2 - 200, 200), 'crossbow', pygame.image.load('crossbow.png'), (90, 90))
+    buttons['wpchKnife'] = button((RES[0] / 2 - 200, 300), 'knives', pygame.image.load('knife.png'), (90, 90))
+    buttons['wpchSword'] = button((RES[0] / 2 + 200, 100), 'sword', pygame.image.load('sword.png'), (90, 90))
+    buttons['wpchAxe'] = button((RES[0] / 2 + 200, 200), 'axe', pygame.image.load('axe.png'), (90, 90))
+    buttons['wpchSpear'] = button((RES[0] / 2 + 200, 300), 'spear', pygame.image.load('spear.png'), (90, 90))
 
 ##def initSounds():
 ##    """
@@ -142,11 +229,9 @@ def setMusic(song, delay):
 
 def displayPlayer(display):
     display.blit(PLAYER.image, (PLAYER.coords[0] - PLAYER.size, PLAYER.coords[1] - PLAYER.size))
-    if PLAYER.hp > 0:
-        PLAYER.show_hp(display)
     if PLAYER.entity_target != None:
         #pygame.draw.ellipse(display, (255, 0, 0), ((int(PLAYER.entity_target.coords[0] - 20), int(PLAYER.entity_target.coords[1])), int((PLAYER.entity_target.coords[0] + 20), int(PLAYER.entity_target.coords[1])), int(PLAYER.entity_target.coords[0]), int(PLAYER.entity_target.coords[1] - 20)), (int(PLAYER.entity_target.coords[0]), int(PLAYER.entity_target.coords[1] + 20)))
-        display.blit(pygame.image.load('target_reticule.png'), (PLAYER.entity_target.coords[0] - 23, PLAYER.entity_target.coords[1] - 23))
+        display.blit(pygame.image.load('target_reticule.png'), (PLAYER.entity_target.coords[0] - 43, PLAYER.entity_target.coords[1] - 43))
     
 def displayArrows(room, display):
     if room.warps[1] != None:
@@ -164,8 +249,7 @@ def roomLoop(room, display):
             display.blit(i.image, (i.coords[0] - i.size, i.coords[1] - i.size))
             i.AI(PLAYER)
             i.move()
-            if i.entity_target != None:
-                i.attack(TPS)
+            i.attack(TPS)
             i.checkDeath(PLAYER)
             if i.hp > 0:
                 i.show_hp(display)
@@ -175,15 +259,26 @@ def roomLoop(room, display):
 def show_tick(display):
         length = int((100 * PLAYER.tick)/200)
         bar2 = pygame.transform.smoothscale(pygame.image.load('ybar.png'), (length, 20))
-        display.blit(pygame.image.load('bbar.png'), (100, RES[1] - 60))
-        display.blit(bar2, (100, RES[1] - 60))
+        display.blit(pygame.image.load('bbar.png'), (220, RES[1] - 90))
+        display.blit(bar2, (220, RES[1] - 90))
+
+def show_hp(display):
+        length = int((200 * PLAYER.hp)/PLAYER.hpmax)
+        bar2 = pygame.transform.smoothscale(pygame.image.load('gbar.png'), (length, 40))
+        display.blit(pygame.transform.smoothscale(pygame.image.load('rbar.png'), (200, 40)), (RES[0] - 260, 60))
+        display.blit(bar2, (RES[0] - 260, 60))
 
 def display_gui(display, gui, font):
-    display.blit(gui[0], (0, RES[1] - 200))
-    display.blit(PLAYER.equipment[0].image, (23, RES[1] - 70))
+    display.blit(gui[0], (0, RES[1] - 300))
+    display.blit(PLAYER.equipment[0].image, (48, RES[1] - 142))
     display.blit(gui[1], (0, 0))
-    display.blit(font.render(str(PLAYER.kills), True, (150, 100, 0)), (150, 8))
+    display.blit(gui[2], (220, RES[1] - 150))
+    display.blit(font[0].render(str(PLAYER.kills), True, (150, 100, 0)), (120, 8))
+    display.blit(font[1].render(str(PLAYER.equipment[0].level), True, (130, 100, 0)), (280, RES[1] - 125))
+    display.blit(font[1].render(str(PLAYER.equipment[0].exp), True, (130, 100, 0)), (280, RES[1] - 145))
     show_tick(display)
+    if PLAYER.hp > 0:
+        show_hp(display)
 
 def initialize():
     """
@@ -192,26 +287,30 @@ def initialize():
     Returns a list of buttons in the main menu, and the starting game state.
     """
     print('CONSOLE: Initializing loop...')
-    global PLAYER, resolution, font
-    PLAYER = objects.player([3, 20, 50], ['player.png', 'humandeath.ogg'], (700, 700))
+    global PLAYER, resolution, font, buttons
+    buttons = {}
+    PLAYER = objects.player([3, 20, 50], ['player.png', 'humandeath.ogg'], (500, 500))
     resolution = (RES)
     room = world.area(world.world['hunterland1'])
     room.buildSurface(resolution)
-    gui = [pygame.image.load('GUI_1.png'), pygame.image.load('GUI_2.png')]
+    gui = [pygame.image.load('GUI_1.png'), pygame.image.load('GUI_2.png'), pygame.image.load('GUI_3.png')]
     pygame.init()
     pygame.mixer.init()
     pygame.font.init()
-    font = pygame.font.Font(None, 60)
+    font = [pygame.font.Font(None, 60), pygame.font.Font(None, 18)]
 ##    sounds = initSounds()
     display = pygame.display.set_mode(resolution)
     pygame.display.toggle_fullscreen()
-    buttons = initButtons()
-    gamestate = 1 #Gamestate 1 is the main menu.
+    initButtons()
+    buttons['menuQuit'].active = True
+    buttons['menuPlay'].active = True
+    buttons['menuTitle'].active = True
+    gamestate = 1 #Gamestate 1 is the main menu
     setMusic('Music', 0)
     print('CONSOLE: Init complete. Starting loop.')
-    return buttons, gamestate, display, room, gui
+    return gamestate, display, room, gui
 
-def runProgram(buttons, gamestate, display, room, gui):
+def runProgram(gamestate, display, room, gui):
     """
     Run the program main loop
 
@@ -225,12 +324,12 @@ def runProgram(buttons, gamestate, display, room, gui):
                 if event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
                         for i in buttons:    
-                            i.buttonPressed()
+                            buttons[i].buttonPressed()
                 if event.type == QUIT:
                     terminate()
-            gamestate = checkButtons(buttons)
+            gamestate = checkButtons(gamestate)
             for i in buttons:
-                i.displayButtons(display)
+                buttons[i].displayButtons(display)
                 
         elif gamestate == 2:
 ##            display.fill((50, 150, 50))
@@ -238,7 +337,6 @@ def runProgram(buttons, gamestate, display, room, gui):
                 gamestate = 3
             display.blit(room.scene, (0, 0))
             displayPlayer(display)
-            display_gui(display, gui, font)
             for event in pygame.event.get():
                 if event.type == QUIT:
                     terminate()
@@ -255,6 +353,7 @@ def runProgram(buttons, gamestate, display, room, gui):
             PLAYER.regenerate()
             roomLoop(room, display)
             room = checkWarp(room)
+            display_gui(display, gui, font)
             displayArrows(room, display)
 
         elif gamestate == 0:
@@ -268,6 +367,19 @@ def runProgram(buttons, gamestate, display, room, gui):
                 if event.type == QUIT:
                     terminate()
 
+        elif gamestate == 4:
+            display.fill((85, 35, 5))
+            for event in pygame.event.get():
+                if event.type == MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        for i in buttons:    
+                            buttons[i].buttonPressed()
+                if event.type == QUIT:
+                    terminate()
+            gamestate = checkButtons(gamestate)
+            for i in buttons:
+                buttons[i].displayButtons(display)
+
         CLOCK.tick(TPS)
         pygame.display.update()
 
@@ -275,8 +387,8 @@ def main():
     """
     Initialize data, then run the program.
     """
-    buttons, gamestate, display, room, gui = initialize()
-    runProgram(buttons, gamestate, display, room, gui)
+    gamestate, display, room, gui = initialize()
+    runProgram(gamestate, display, room, gui)
 
 if __name__ == '__main__':
     main()
